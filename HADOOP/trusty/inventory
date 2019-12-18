@@ -1,0 +1,2 @@
+[fedora]
+10.239.168.115 ansible_ssh_user=vagrant

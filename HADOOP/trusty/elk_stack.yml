@@ -1,0 +1,73 @@
+--- 
+
+- name: install ELK stack
+  hosts: all
+  become: true
+  vars_files:
+    - variable.yml
+  tasks:
+    - name: install pip on Fedora
+      yum:
+        name: "{{ pip_package }}"
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: install docker-py
+      pip:
+        name: "{{ docker_package }}"
+        state: present
+
+    - name: setup Elasticsearch
+      docker_container: 
+        name: elasticsearch
+        state: started
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.0.1
+        expose: 
+          - 9200:9200
+
+    - name: setup Logstash
+      docker_container:
+        name: logstash
+        state: started
+        image: docker.elastic.co/logstash/logstash:6.0.1
+        expose:
+          - 5044:5044
+        links: 
+          - elasticsearch
+
+    - name: setup Kibana
+      docker_container: 
+        name: kibana
+        state: started 
+        image: docker.elastic.co/kibana/kibana:6.0.1
+        expose:
+          - 5061:5061
+        links: 
+          - elasticsearch
+
+  #  - name: install Fedora Packages
+  #    yum:
+  #      name: "{{ fedora_packages }}"
+  #      state: present
+  #    when: ansible_os_family == "RedHat"
+  #
+  #  - name: add Fedora repository
+  #    yum_repository:
+  #      name: docker
+  #      description: docker repository
+  #      baseurl: https://docs.docker.com/engine/installation/linux/repo_files/fedora/docker.repo   #https://download.docker.com/linux/centos/docker-ce.repo
+  #      state: present
+  #      file: docker
+  #    when: ansible_os_family == "RedHat"
+  #
+  #  - name: update Fedora cache
+  #    yum:
+  #      update_cache: true
+  #    when: ansible_os_family == "RedHat"
+  #
+  #  - name: install docker on Fedora 
+  #    yum:
+  #      name: docker-ce
+  #      state: present
+  #    become: yes 
+  #    when: ansible_os_family == "RedHat"
